@@ -3,10 +3,13 @@
   "name": "anonymous-chat",
   "builds": [
     { "src": "server.js", "use": "@vercel/node" },
-    { "src": "index.html", "use": "@vercel/static" }
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "admin.html", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/messages", "dest": "server.js" },
-    { "src": "/", "dest": "index.html" }
+    { "src": "/admin/clear", "dest": "server.js" },
+    { "src": "/", "dest": "index.html" },
+    { "src": "/admin", "dest": "admin.html" }
   ]
 }
