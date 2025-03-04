@@ -8,6 +8,10 @@ app.use(express.json({limit: '5mb'}));
 
 let messages = [];
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.get('/messages', (req, res) => {
     res.json(messages);
 });
