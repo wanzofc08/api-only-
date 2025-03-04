@@ -9,4 +9,4 @@
     { "src": "/messages", "dest": "server.js" },
     { "src": "/", "dest": "index.html" }
   ]
-}￼Enter
+}
