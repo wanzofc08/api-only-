@@ -16,8 +16,5 @@
         "api/messages": {
             "memory": 512
         }
-  },
-  "environment": {
-    "MONGODB_URI": "mongodb+srv://salman:ahmad@cluster0.gjslz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
   }
 }
