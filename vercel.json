@@ -11,5 +11,13 @@
     { "src": "/admin/clear", "dest": "server.js" },
     { "src": "/", "dest": "index.html" },
     { "src": "/admin", "dest": "admin.html" }
-  ]
+  ],
+  "functions": {
+        "api/messages": {
+            "memory": 512
+        }
+  },
+  "environment": {
+    "MONGODB_URI": "mongodb+srv://username:password@your-cluster.mongodb.net/your-database"
+  }
 }
