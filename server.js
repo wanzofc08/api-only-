@@ -5,13 +5,13 @@ const mongoose = require('mongoose');
 const path = require('path');
 
 const app = express();
-const port = process.env.PORT || 8080; // Gunakan environment variable untuk port
+const port = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
-// Koneksi ke MongoDB
-const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://salman:ahmad@cluster0.gjslz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'; // Gunakan environment variable atau localhost
+// Ganti URI koneksi MongoDB di sini (JANGAN LAKUKAN INI DALAM PRODUKSI!)
+const mongoUri = 'mongodb+srv://username:password@your-cluster.mongodb.net/your-database';
 
 mongoose.connect(mongoUri, {
     useNewUrlParser: true,
@@ -19,7 +19,6 @@ mongoose.connect(mongoUri, {
 }).then(() => console.log('Terhubung ke MongoDB'))
   .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
 
-// Skema Mongoose untuk pesan
 const messageSchema = new mongoose.Schema({
     id: String,
     username: String,
@@ -31,10 +30,9 @@ const messageSchema = new mongoose.Schema({
 
 const Message = mongoose.model('Message', messageSchema);
 
-// Endpoint untuk mendapatkan semua pesan
 app.get('/messages', async (req, res) => {
     try {
-        const messages = await Message.find().sort({ timestamp: 1 }); // Urutkan berdasarkan waktu pengiriman
+        const messages = await Message.find().sort({ timestamp: 1 });
         res.json(messages);
     } catch (err) {
         console.error('Gagal mendapatkan pesan:', err);
@@ -42,7 +40,6 @@ app.get('/messages', async (req, res) => {
     }
 });
 
-// Endpoint untuk mengirim pesan baru
 app.post('/messages', async (req, res) => {
     const newMessage = new Message(req.body);
     try {
@@ -55,7 +52,6 @@ app.post('/messages', async (req, res) => {
     }
 });
 
-// Endpoint untuk membersihkan semua pesan (hanya untuk admin)
 app.post('/admin/clear', async (req, res) => {
     try {
         await Message.deleteMany({});
@@ -67,7 +63,6 @@ app.post('/admin/clear', async (req, res) => {
     }
 });
 
-// Serve file statis (index.html dan admin.html)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
