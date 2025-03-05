@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
 // Ganti URI koneksi MongoDB di sini (JANGAN LAKUKAN INI DALAM PRODUKSI!)
-const mongoUri = 'mongodb+srv://username:password@your-cluster.mongodb.net/your-database';
+const mongoUri = 'mongodb+srv://zanssxploit:pISqUYgJJDfnLW9b@cluster0.fgram.mongodb.net/?retryWrites=true&w=majority';
 
 mongoose.connect(mongoUri, {
     useNewUrlParser: true,
