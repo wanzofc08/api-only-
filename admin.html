@@ -3,59 +3,162 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel</title>
+    <title>Admin Dashboard - WanzoFC 2050</title>
     <style>
+        /* Styling dasar (perlu ditingkatkan dengan CSS modern seperti Flexbox/Grid) */
         body {
-            font-family: sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            background-color: #1e293b; /* Latar belakang gelap */
+            color: #cbd5e0; /* Warna teks terang */
             margin: 0;
+            padding: 0;
         }
 
-        .admin-container {
-            background-color: white;
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
             padding: 20px;
+            background-color: #334155; /* Area konten lebih gelap */
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        h1, h2 {
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #475569;
+        }
+
+        th {
+            background-color: #475569;
+            color: #e2e8f0;
+        }
+
+        tbody tr:hover {
+            background-color: #526075;
         }
 
         button {
-            background-color: #dc3545;
-            color: white;
+            background-color: #64748b;
+            color: #f1f5f9;
             padding: 10px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
+
+        button:hover {
+            background-color: #4a5568;
+        }
+
+        /* Tambahkan styling modern lainnya di sini */
     </style>
 </head>
 <body>
-    <div class="admin-container">
-        <h2>Admin Panel</h2>
-        <button id="clearChatButton">Clear All Messages</button>
+    <div class="container">
+        <h1>WanzoFC Admin Dashboard</h1>
+        <h2>Daftar Permintaan</h2>
+        <table id="requestTable">
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>Email</th>
+                    <th>Permintaan</th>
+                    <th>Waktu</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <button id="clearChatButton">Bersihkan Chat</button>
     </div>
 
     <script>
         const clearChatButton = document.getElementById('clearChatButton');
-        const backendURL = 'https://chat-wanzofc.vercel.app';
+        const requestTableBody = document.getElementById('requestTable').getElementsByTagName('tbody')[0];
+
+        async function loadRequests() {
+            try {
+                const response = await fetch('/admin/requests');
+                const requests = await response.json();
+
+                requestTableBody.innerHTML = '';
+
+                requests.forEach(request => {
+                    let row = requestTableBody.insertRow();
+                    let namaCell = row.insertCell();
+                    let emailCell = row.insertCell();
+                    let permintaanCell = row.insertCell();
+                    let waktuCell = row.insertCell();
+                    let aksiCell = row.insertCell(); // Cell untuk tombol aksi
+
+                    namaCell.innerHTML = request.nama;
+                    emailCell.innerHTML = request.email;
+                    permintaanCell.innerHTML = request.permintaan;
+                    waktuCell.innerHTML = new Date(request.timestamp).toLocaleString();
+
+                    // Tombol "Selesai"
+                    let selesaiButton = document.createElement('button');
+                    selesaiButton.textContent = 'Selesai';
+                    selesaiButton.addEventListener('click', () => handleSelesai(request._id)); // Kirim ID request
+                    aksiCell.appendChild(selesaiButton);
+                });
+            } catch (error) {
+                console.error('Gagal mengambil daftar permintaan:', error);
+                requestTableBody.innerHTML = '<tr><td colspan="5">Gagal mengambil data.</td></tr>';
+            }
+        }
+
+        // Fungsi untuk menandai permintaan sebagai "selesai" (perlu implementasi backend)
+        async function handleSelesai(requestId) {
+            // Implementasikan logika untuk menandai permintaan sebagai "selesai" di backend
+            // Misalnya, kirim DELETE request ke `/admin/requests/:id`
+
+            console.log(`Menandai permintaan dengan ID ${requestId} sebagai selesai.`);
+            // Contoh:
+            try {
+                const response = await fetch(`/admin/requests/${requestId}`, {
+                    method: 'DELETE' // Atau PUT/PATCH tergantung implementasi
+                });
+
+                if (response.ok) {
+                    alert('Permintaan berhasil ditandai sebagai selesai.');
+                    loadRequests(); // Refresh daftar permintaan
+                } else {
+                    alert('Gagal menandai permintaan sebagai selesai.');
+                }
+            } catch (error) {
+                console.error('Error menandai permintaan:', error);
+                alert('Terjadi kesalahan saat menandai permintaan sebagai selesai.');
+            }
+        }
+
+        window.onload = loadRequests;
 
         clearChatButton.addEventListener('click', async () => {
-            const confirmed = confirm('Are you sure you want to clear all messages? This action cannot be undone.');
-            if (confirmed) {
-                try {
-                    const response = await fetch(`${backendURL}/admin/clear`, { method: 'POST' });
-                    if (response.ok) {
-                        alert('Chat cleared successfully.');
-                    } else {
-                        alert('Failed to clear chat.');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('An error occurred.');
-                }
+            try {
+                const response = await fetch('/admin/clear', {
+                    method: 'POST'
+                });
+                const message = await response.text();
+                alert(message);
+            } catch (error) {
+                console.error('Gagal membersihkan chat:', error);
+                alert('Gagal membersihkan chat.');
             }
         });
     </script>
