@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>random chat</title>
+    <title>Random Chat</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -220,12 +221,16 @@
         }
     </style>
 </head>
+
 <body>
     <div id="particles-js"></div>
+
     <div class="container">
-        <h1 class="header">random chat</h1>
+        <h1 class="header">Random Chat</h1>
+
         <div class="chat-box" id="chatBox">
         </div>
+
         <div class="input-box">
             <input type="text" id="username" placeholder="Enter Nickname">
             <input type="file" id="imageInput" accept="image/*" class="add-image">
@@ -233,6 +238,7 @@
             <button id="sendButton">Send</button>
         </div>
     </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script>
@@ -277,10 +283,10 @@
                     "value": 5,
                     "random": true,
                     "anim": {
-                        "enable": true,
+                        "enable": false,
                         "speed": 40,
                         "size_min": 0.1,
-                        "sync": true
+                        "sync": false
                     }
                 },
                 "line_linked": {
@@ -360,53 +366,65 @@
         const backendURL = 'https://chat-wanzofc.vercel.app';
 
         async function loadMessages() {
-            const response = await fetch(`${backendURL}/messages`);
-            const messages = await response.json();
-
-            chatBox.innerHTML = '';
-
-            messages.forEach(message => {
-                const messageDiv = document.createElement('div');
-                messageDiv.classList.add('message');
-
-                let messageContent = `
-                <div class="username">${message.username}</div>
-                <p>${message.text}</p>`;
-
-                if (message.image) {
-                    messageContent += `<img src="${message.image}" alt="Image">`;
+            try {
+                const response = await fetch(`${backendURL}/messages`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                messageContent += `
-                    <small>${new Date(message.timestamp).toLocaleString()}</small>
-                    <button class="reply-button" data-message-id="${message.id}">
-                         <i class="fa-solid fa-reply"></i> Reply
-                    </button>
-                `;
+                const messages = await response.json();
 
-                if (message.replyTo) {
-                    const repliedToMessage = messages.find(m => m.id === message.replyTo);
-                    if (repliedToMessage) {
-                        messageContent = `
-                        <div class="replied-to">
-                            Replying to: ${repliedToMessage.username}: ${repliedToMessage.text}
-                        </div>
-                        ` + messageContent;
+                chatBox.innerHTML = '';
+
+                messages.forEach(message => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.classList.add('message');
+
+                    let messageContent = `
+                    <div class="username">${message.username}</div>
+                    <p>${message.text}</p>`;
+
+                    if (message.image) {
+                        messageContent += `<img src="${message.image}" alt="Image">`;
                     }
-                }
 
-                const replyBox = document.createElement('div');
-                replyBox.classList.add('reply-box');
-                replyBox.innerHTML = `
-                    <textarea placeholder="Type your reply..."></textarea>
-                    <button class="send-reply-button" data-message-id="${message.id}">Send Reply</button>
-                `;
-                messageDiv.innerHTML = messageContent;
-                messageDiv.appendChild(replyBox);
+                    messageContent += `
+                        <small>${new Date(message.timestamp).toLocaleString()}</small>
+                        <button class="reply-button" data-message-id="${message.id}">
+                            <i class="fa-solid fa-reply"></i> Reply
+                        </button>
+                    `;
 
-                chatBox.appendChild(messageDiv);
+                    if (message.replyTo) {
+                        const repliedToMessage = messages.find(m => m.id === message.replyTo);
+                        if (repliedToMessage) {
+                            messageContent = `
+                            <div class="replied-to">
+                                Replying to: ${repliedToMessage.username}: ${repliedToMessage.text}
+                            </div>
+                            ` + messageContent;
+                        }
+                    }
 
-            });
+                    const replyBox = document.createElement('div');
+                    replyBox.classList.add('reply-box');
+                    replyBox.innerHTML = `
+                        <textarea placeholder="Type your reply..."></textarea>
+                        <button class="send-reply-button" data-message-id="${message.id}">Send Reply</button>
+                    `;
+                    messageDiv.innerHTML = messageContent;
+                    messageDiv.appendChild(replyBox);
 
+                    chatBox.appendChild(messageDiv);
+                });
+
+                chatBox.scrollTop = chatBox.scrollHeight; // Scroll ke pesan terbaru
+                attachReplyEventListeners(); // Pasang event listener setelah memuat pesan
+            } catch (error) {
+                console.error('Gagal memuat pesan:', error);
+            }
+        }
+
+        function attachReplyEventListeners() {
             document.querySelectorAll('.reply-button').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const messageId = event.target.dataset.messageId;
@@ -431,30 +449,41 @@
                     const replyBox = messageDiv.querySelector('.reply-box');
                     const replyTextarea = replyBox.querySelector('textarea');
                     const replyText = replyTextarea.value;
+
                     if (!replyText) {
                         alert('Please enter a reply message.');
                         return;
                     }
+
                     const username = usernameInput.value.trim();
                     const newMessage = {
+                        id: generateId(),
                         username: username,
                         text: replyText,
                         replyTo: messageId,
                         timestamp: new Date().toISOString()
                     };
-                    await fetch(`${backendURL}/messages`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(newMessage)
-                    });
-                    replyTextarea.value = '';
-                    replyBox.style.display = 'none';
-                    loadMessages();
+
+                    try {
+                        const response = await fetch(`${backendURL}/messages`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(newMessage)
+                        });
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        replyTextarea.value = '';
+                        replyBox.style.display = 'none';
+                        loadMessages(); // Muat ulang pesan setelah mengirim balasan
+                    } catch (error) {
+                        console.error('Gagal mengirim balasan:', error);
+                    }
                 });
             });
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         async function sendMessage() {
@@ -481,17 +510,24 @@
                 timestamp: new Date().toISOString()
             };
 
-            await fetch(`${backendURL}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(newMessage)
-            });
+            try {
+                const response = await fetch(`${backendURL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newMessage)
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-            messageInput.value = '';
-            imageInput.value = '';
-            loadMessages();
+                messageInput.value = '';
+                imageInput.value = '';
+                loadMessages();
+            } catch (error) {
+                console.error('Gagal mengirim pesan:', error);
+            }
         }
 
         function generateId() {
@@ -510,7 +546,6 @@
         sendButton.addEventListener('click', sendMessage);
 
         loadMessages();
-
         setInterval(loadMessages, 5000);
     </script>
 </body>
