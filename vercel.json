@@ -18,6 +18,6 @@
         }
   },
   "environment": {
-    "MONGODB_URI": "mongodb+srv://username:password@your-cluster.mongodb.net/your-database"
+    "MONGODB_URI": "mongodb+srv://salman:ahmad@cluster0.gjslz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
   }
 }
