@@ -6,7 +6,7 @@ const port = 8080;
 
 app.use(cors());
 app.use(express.json({
-    limit: '300mb'
+    limit: '5mb'
 }));
 
 let messages = [];
