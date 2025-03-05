@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
 // Koneksi ke MongoDB
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/anonymous_chat'; // Gunakan environment variable atau localhost
+const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://salman:ahmad@cluster0.gjslz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'; // Gunakan environment variable atau localhost
 
 mongoose.connect(mongoUri, {
     useNewUrlParser: true,
