@@ -1,33 +1,73 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 const path = require('path');
+
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8080; // Gunakan environment variable untuk port
 
 app.use(cors());
-app.use(express.json({
-    limit: '5mb'
-}));
+app.use(express.json({ limit: '5mb' }));
 
-let messages = [];
+// Koneksi ke MongoDB
+const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/anonymous_chat'; // Gunakan environment variable atau localhost
 
-app.get('/messages', (req, res) => {
-    res.json(messages);
+mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => console.log('Terhubung ke MongoDB'))
+  .catch(err => console.error('Gagal terhubung ke MongoDB:', err));
+
+// Skema Mongoose untuk pesan
+const messageSchema = new mongoose.Schema({
+    id: String,
+    username: String,
+    text: String,
+    image: String,
+    timestamp: String,
+    replyTo: String
 });
 
-app.post('/messages', (req, res) => {
-    const newMessage = req.body;
-    messages.push(newMessage);
-    console.log('Pesan baru diterima:', newMessage);
-    res.status(201).send('Pesan berhasil dikirim!');
+const Message = mongoose.model('Message', messageSchema);
+
+// Endpoint untuk mendapatkan semua pesan
+app.get('/messages', async (req, res) => {
+    try {
+        const messages = await Message.find().sort({ timestamp: 1 }); // Urutkan berdasarkan waktu pengiriman
+        res.json(messages);
+    } catch (err) {
+        console.error('Gagal mendapatkan pesan:', err);
+        res.status(500).send('Gagal mendapatkan pesan');
+    }
 });
 
-app.post('/admin/clear', (req, res) => {
-    messages = [];
-    console.log('Chat cleared by admin');
-    res.status(200).send('Chat cleared successfully.');
+// Endpoint untuk mengirim pesan baru
+app.post('/messages', async (req, res) => {
+    const newMessage = new Message(req.body);
+    try {
+        await newMessage.save();
+        console.log('Pesan baru disimpan:', newMessage);
+        res.status(201).send('Pesan berhasil dikirim!');
+    } catch (err) {
+        console.error('Gagal menyimpan pesan:', err);
+        res.status(500).send('Gagal menyimpan pesan');
+    }
 });
 
+// Endpoint untuk membersihkan semua pesan (hanya untuk admin)
+app.post('/admin/clear', async (req, res) => {
+    try {
+        await Message.deleteMany({});
+        console.log('Chat cleared by admin');
+        res.status(200).send('Chat cleared successfully.');
+    } catch (err) {
+        console.error('Gagal membersihkan chat:', err);
+        res.status(500).send('Gagal membersihkan chat');
+    }
+});
+
+// Serve file statis (index.html dan admin.html)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
